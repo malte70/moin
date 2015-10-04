@@ -1,0 +1,114 @@
+#!/bin/sh
+#
+# configure
+#     Part of: malte70/moin
+#
+# x86_64 GNU/Linux assembler hello world
+#
+# Copyright (c) 2015 Malte Bublitz, http://malte-bublitz.de
+# All rights reserved.
+#
+
+cat <<EOF
+
+configure script for malte70/moin
+
+EOF
+
+# -n option for echo is not supported everywhere, but if this check succeeds, it is.
+printf "Checking for operating system... "
+_OS=$(uname -o 2>/dev/null || uname -s)
+echo $_OS
+if [[ $_OS != "GNU/Linux" ]]
+then
+	echo "$0: Error: Unsupported operating system: $_OS!" >&2
+	exit 1
+fi
+
+echo -n "Checking for CPU architecture... "
+_CPUTYPE=$(uname -m)
+echo $_CPUTYPE
+if [[ $_CPUTYPE != "x86_64" ]]
+then
+	echo "$0: Error: Unsupported architecture: $_CPUTYPE!" >&2
+	exit 1
+fi
+
+echo -n "Checking for gas... "
+
+if which gas &>/dev/null
+then
+	echo $(which gas)
+else
+	echo "Not found!"
+fi
+
+echo -n "Checking for as... "
+if which as &>/dev/null
+then
+	echo $(which as)
+else
+	echo "Not found!"
+	exit 1
+fi
+
+echo -n "Checking for gcc... "
+
+if which gcc &>/dev/null
+then
+	CC=$(which gcc)
+	echo $CC
+else
+	echo "Not found!"
+	exit 1
+fi
+
+echo -n "Creating Makefile... "
+
+(
+	echo "all:"
+	echo "	@make -C src/ -s all"
+	echo ""
+	echo "clean:"
+	echo "	@make -C src/ -s clean"
+	echo ""
+) >Makefile
+echo "Done."
+
+echo -n "Creating src/Makefile... "
+(
+	echo "CC=$CC"
+	echo "CFLAGS=-march=native"
+	echo ""
+	echo "all: ../bin/moin"
+	echo "	"
+	echo "main.o: main.S"
+	echo "	@echo \" [CC] src/main.o\""
+	echo "	@gcc -c main.S"
+	echo "	"
+	echo "../bin/moin: main.o"
+	echo "	@echo \" [LD] bin/moin\""
+	echo "	@gcc -o ../bin/moin main.o"
+	echo "	"
+	echo "clean:"
+	echo "	@echo \" [RM] bin/moin\""
+	echo "	@\$(RM) ../bin/moin"
+	echo "	@echo \" [RM] src/*.o\""
+	echo "	@\$(RM) *.o"
+	echo "clean-all:"
+	echo "	@make -s clean"
+	echo "	@echo \" [RM] Makefile\""
+	echo "	@\$(RM) Makefile"
+	echo "	@echo \" [RM] src/Makefile\""
+	echo "	@\$(RM) src/Makefile"
+) >src/Makefile
+
+cat <<EOF
+
+Now run
+  make
+to compile the source code.
+
+EOF
+
+# vim: set ft=sh:
