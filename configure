@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env bash
 #
 # configure
 #     Part of: malte70/moin
@@ -15,53 +15,61 @@ configure script for malte70/moin
 
 EOF
 
+# Checks whether an application ($2) is available on the system.
+# If it was found and the value of $1 is empty, it is stored in the variable
+# name given in $1.
+# If $3 is set, the script will exit.
+# Example usage:
+#   check_for_application AS gas
+#   check_for_application CC clang 1
+check_for_application() {
+	if [ -n "`eval "echo $\"\${1}\""`" ]
+	then
+		return
+	fi
+
+	echo -n "Checking for ${2}... "
+
+	if which "$2" &>/dev/null
+	then
+		export $1=$(which $2)
+		echo "`eval "echo $\"\${1}\""`"
+	else
+		echo "Not found!"
+		if [ -n "$3" ]
+		then
+			exit 1
+		fi
+	fi
+}
+
 # -n option for echo is not supported everywhere, but if this check succeeds, it is.
 printf "Checking for operating system... "
 _OS=$(uname -o 2>/dev/null || uname -s)
 echo $_OS
-if [[ $_OS != "GNU/Linux" ]]
-then
-	echo "$0: Error: Unsupported operating system: $_OS!" >&2
-	exit 1
-fi
+case "$_OS" in
+	"GNU/Linux"|"FreeBSD") ;;
+	*)
+		echo "$0: Error: Unsupported operating system: $_OS!" >&2
+		exit 1
+esac
 
 echo -n "Checking for CPU architecture... "
 _CPUTYPE=$(uname -m)
 echo $_CPUTYPE
-if [[ $_CPUTYPE != "x86_64" ]]
-then
-	echo "$0: Error: Unsupported architecture: $_CPUTYPE!" >&2
-	exit 1
-fi
+case "$_CPUTYPE" in
+	"x86_64"|"amd64") ;;
+	*)
+		echo "$0: Error: Unsupported architecture: $_CPUTYPE!" >&2
+		exit 1
+esac
 
-echo -n "Checking for gas... "
+unset AS CC
 
-if which gas &>/dev/null
-then
-	echo $(which gas)
-else
-	echo "Not found!"
-fi
-
-echo -n "Checking for as... "
-if which as &>/dev/null
-then
-	echo $(which as)
-else
-	echo "Not found!"
-	exit 1
-fi
-
-echo -n "Checking for gcc... "
-
-if which gcc &>/dev/null
-then
-	CC=$(which gcc)
-	echo $CC
-else
-	echo "Not found!"
-	exit 1
-fi
+check_for_application AS gas
+check_for_application AS as 1
+check_for_application CC gcc
+check_for_application CC clang 1
 
 echo -n "Creating Makefile... "
 
@@ -84,11 +92,11 @@ echo -n "Creating src/Makefile... "
 	echo "	"
 	echo "main.o: main.S"
 	echo "	@echo \" [CC] src/main.o\""
-	echo "	@gcc -c main.S"
+	echo "	@\$(CC) -c main.S"
 	echo "	"
 	echo "../bin/moin: main.o"
 	echo "	@echo \" [LD] bin/moin\""
-	echo "	@gcc -o ../bin/moin main.o"
+	echo "	@\$(CC) -o ../bin/moin main.o"
 	echo "	"
 	echo "clean:"
 	echo "	@echo \" [RM] bin/moin\""
