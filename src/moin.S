@@ -1,7 +1,7 @@
-.global main
+.global moin
 
 	.text
-main:
+moin:
 	mov	$m, %rdi
 	call	puts
 	
@@ -12,3 +12,4 @@ main:
 	.section .rodata
 m:
 	.asciz	"Moin!"
+
