@@ -116,9 +116,9 @@ echo -n "Creating src/Makefile... "
 	echo "clean-all:"
 	echo "	@make -s clean"
 	echo "	@echo \" [RM] Makefile\""
-	echo "	@\$(RM) Makefile"
+	echo "	@\$(RM) ../Makefile"
 	echo "	@echo \" [RM] src/Makefile\""
-	echo "	@\$(RM) src/Makefile"
+	echo "	@\$(RM) Makefile"
 	echo "	"
 ) >src/Makefile
 
